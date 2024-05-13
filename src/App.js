@@ -6,8 +6,8 @@ import 'flowbite';
 const API_URL = process.env.REACT_APP_POKEMON_API_URL || "https://pokeapi.co/api/v2/pokemon";
 
 const PokemonList = () => {
-  const [allPokemons, setAllPokemons] = useState([]);  // Stocke tous les Pokémon pour la recherche
-  const [displayedPokemons, setDisplayedPokemons] = useState([]);  // Pokémon actuellement affichés
+  const [allPokemons, setAllPokemons] = useState([]);
+  const [displayedPokemons, setDisplayedPokemons] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [hasMore, setHasMore] = useState(true);
   const [offset, setOffset] = useState(0);
@@ -44,12 +44,11 @@ const PokemonList = () => {
   const handleSearchChange = async (value) => {
     setSearchTerm(value);
     if (!value) {
-      // Reset to initial pagination loading
       setDisplayedPokemons([]);
       setOffset(0);
-      loadPokemons(true);  // Reset the loading with the initial set of data
+      loadPokemons(true);
     } else {
-      await fetchPokemons(0, 1000, true); // Load all for search
+      await fetchPokemons(0, 1000, true);
       const filtered = allPokemons.filter(pokemon => pokemon.name.toLowerCase().includes(value.toLowerCase()));
       setDisplayedPokemons(filtered);
     }
