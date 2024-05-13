@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
-import Loader from './components/Loader'; // Importez le nouveau composant Loader
+import Loader from './components/Loader'; // Importez le nouveau composant Loader SearchForm
+import SearchComponent from './components/SearchComponent'; // Importez le nouveau composant Loader SearchForm
 import 'flowbite';
 
 const API_URL = process.env.REACT_APP_POKEMON_API_URL || "https://pokeapi.co/api/v2/pokemon";
@@ -41,6 +42,9 @@ const PokemonList = () => {
   }, []);
 
   return (
+    <div>
+      <SearchComponent />
+
     <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
       {pokemons.map((pokemon, index) => (
         <div key={index} className="bg-white border border-gray-200 rounded-lg shadow overflow-hidden">
@@ -51,6 +55,7 @@ const PokemonList = () => {
         </div>
       ))}
       {isLoading && <Loader />}
+    </div> 
     </div>
   );
 };
