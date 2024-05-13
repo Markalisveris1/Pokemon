@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from "react";
 import Loader from './components/Loader'; // Importez le nouveau composant Loader
 import 'flowbite';
 
-const API_URL = process.env.REACT_APP_POKEMON_API_URL || "https://pokeapi.co/api/v2/pokemon1";
+const API_URL = process.env.REACT_APP_POKEMON_API_URL || "https://pokeapi.co/api/v2/pokemon";
 
 const PokemonList = () => {
   const [pokemons, setPokemons] = useState([]);
