@@ -19,7 +19,7 @@ const PokemonList = () => {
       const response = await fetch(`${API_URL}?limit=${all ? 1000 : limit}&offset=${offset}`);
       if (!response.ok) throw new Error('Network response was not ok');
       const data = await response.json();
-      if (all) setAllPokemons(data.results); // Si la recherche est activée, stockez tous les Pokémon
+      if (all) setAllPokemons(data.results); // Stockez tous les Pokémon pour la recherche
       return data.results;
     } catch (error) {
       console.error("Failed to fetch data:", error);
@@ -32,10 +32,20 @@ const PokemonList = () => {
   const loadPokemons = async (reset = false) => {
     if (isLoading || (!hasMore && !reset)) return;
     const newPokemons = await fetchPokemons(reset ? 0 : offset);
+    const pokemonDetails = await Promise.all(newPokemons.map(async (pokemon) => {
+      const detailsResponse = await fetch(pokemon.url);
+      const details = await detailsResponse.json();
+      return {
+        name: pokemon.name,
+        image: details.sprites.other['dream_world'].front_default || details.sprites.front_default,
+        types: details.types.map(type => type.type.name), // Storing types of each Pokémon
+        stats: details.stats.map(stat => ({ statName: stat.stat.name, value: stat.base_stat })) // Storing stats
+      };
+    }));
     if (reset) {
-      setDisplayedPokemons(newPokemons);
+      setDisplayedPokemons(pokemonDetails);
     } else {
-      setDisplayedPokemons(prev => [...prev, ...newPokemons]);
+      setDisplayedPokemons(prev => [...prev, ...pokemonDetails]);
     }
     setOffset(prev => prev + newPokemons.length);
     setHasMore(newPokemons.length > 0);
@@ -46,7 +56,7 @@ const PokemonList = () => {
     if (!value) {
       setDisplayedPokemons([]);
       setOffset(0);
-      loadPokemons(true);
+      loadPokemons(true); // Reset and load initial data
     } else {
       await fetchPokemons(0, 1000, true);
       const filtered = allPokemons.filter(pokemon => pokemon.name.toLowerCase().includes(value.toLowerCase()));
@@ -75,8 +85,10 @@ const PokemonList = () => {
         {displayedPokemons.map((pokemon, index) => (
           <div key={index} className="bg-white border border-gray-200 rounded-lg shadow overflow-hidden pokemon-card">
             <div className="text-center p-4">
-              <img className="mx-auto h-40 w-auto" src={pokemon.image || `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${index + 1}.png`} alt={pokemon.name} />
+              <img className="mx-auto h-40 w-auto" src={pokemon.image} alt={pokemon.name} />
               <p className="mt-2 text-xl font-semibold">{pokemon.name}</p>
+              {/* Displaying types as an example of additional information */}
+              <div>{pokemon.types.join(', ')}</div>
             </div>
           </div>
         ))}
