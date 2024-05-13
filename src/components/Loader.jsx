@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
-import 'flowbite';
+import Loader from "./components/Loader"; // Importez le nouveau composant Loader
+import "flowbite";
 
 const API_URL = process.env.REACT_APP_POKEMON_API_URL || "https://pokeapi.co/api/v2/pokemon";
 
@@ -11,14 +12,13 @@ const PokemonList = () => {
 
   const loadPokemons = async () => {
     if (isLoading || !hasMore) return;
-
     setIsLoading(true);
     try {
       const response = await fetch(`${API_URL}?limit=20&offset=${offset}`);
-      if (!response.ok) throw new Error('Network response was not ok');
+      if (!response.ok) throw new Error("Network response was not ok");
       const data = await response.json();
-      setPokemons(prev => [...prev, ...data.results]);
-      setOffset(prev => prev + 20);
+      setPokemons((prev) => [...prev, ...data.results]);
+      setOffset((prev) => prev + 20);
       setHasMore(data.results.length > 0);
     } catch (error) {
       console.error("Failed to fetch data:", error);
@@ -27,13 +27,14 @@ const PokemonList = () => {
   };
 
   const handleScroll = useCallback(() => {
-    if (window.innerHeight + document.documentElement.scrollTop !== document.documentElement.offsetHeight || isLoading) return;
+    if (window.innerHeight + document.documentElement.scrollTop !== document.documentElement.offsetHeight || isLoading)
+      return;
     loadPokemons();
   }, [isLoading]);
 
   useEffect(() => {
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
   }, [handleScroll]);
 
   useEffect(() => {
@@ -45,12 +46,19 @@ const PokemonList = () => {
       {pokemons.map((pokemon, index) => (
         <div key={index} className="bg-white border border-gray-200 rounded-lg shadow overflow-hidden">
           <div className="text-center p-4">
-            <img className="mx-auto h-40 w-auto" src={pokemon.image || `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${index + 1}.png`} alt={pokemon.name} />
+            <img
+              className="mx-auto h-40 w-auto"
+              src={
+                pokemon.image ||
+                `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${index + 1}.png`
+              }
+              alt={pokemon.name}
+            />
             <p className="mt-2 text-xl font-semibold">{pokemon.name}</p>
           </div>
         </div>
       ))}
-      {isLoading && <p>Loading more Pokémons...</p>}
+      {isLoading && <Loader />}
     </div>
   );
 };
