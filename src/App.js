@@ -1,25 +1,41 @@
-import logo from './logo.svg';
-import './App.css';
+import React, { useState, useEffect } from "react";
 
-function App() {
+const PokemonList = () => {
+  const [pokemons, setPokemons] = useState([]);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      const response = await fetch(`https://pokeapi.co/api/v2/pokemon?limit=20&offset=0`);
+      const data = await response.json();
+      setPokemons(data.results);
+    };
+
+    fetchData();
+  }, []);
+
+  const addToPokedex = (pokemon) => {
+    // Add the Pokemon to the Pokédex here
+    console.log(`Adding ${pokemon.name} to the Pokédex`);
+  };
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+    <div>
+      <h1>Pokemon List</h1>
+      {pokemons.map((pokemon, index) => (
+        <div key={index}>
+          <h2>{pokemon.name}</h2>
+          <p>{pokemon.url.split("/")[6]}</p>
+          <img src={`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${pokemon.url.split("/")[6]}.png`} alt={pokemon.name} />
+          <p>
+            {pokemon.types && pokemon.types.map(type => type.type.name).join(", ")}
+          </p>
+          <button onClick={() => addToPokedex(pokemon)}>
+            Add to Pokédex
+          </button>
+        </div>
+      ))}
     </div>
   );
-}
+};
 
-export default App;
+export default PokemonList;
