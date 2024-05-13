@@ -1,6 +1,6 @@
 import React from "react";
 
-const SearchComponent = ({ onSearchChange }) => {
+const SearchComponent = ({ onSearchChange, totalDisplayed, totalPokemons }) => {
   return (
     <form className="max-w-md mx-auto" onSubmit={(e) => e.preventDefault()}>
       <div className="relative">
@@ -11,6 +11,9 @@ const SearchComponent = ({ onSearchChange }) => {
           onChange={(e) => onSearchChange(e.target.value)}
           required
         />
+      </div>
+      <div className="text-center mt-2 text-sm">
+        Affichage de {totalDisplayed} sur {totalPokemons} Pokémon(s)
       </div>
     </form>
   );
