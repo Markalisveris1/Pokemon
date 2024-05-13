@@ -9,86 +9,96 @@ const PokemonList = () => {
   const [allPokemons, setAllPokemons] = useState([]);
   const [displayedPokemons, setDisplayedPokemons] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [hasMore, setHasMore] = useState(true);
   const [offset, setOffset] = useState(0);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [hasMore, setHasMore] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
 
-  const fetchPokemons = async (offset, limit = 20, all = false) => {
+  const fetchPokemons = async (offset, limit = 20) => {
     setIsLoading(true);
     try {
-      const response = await fetch(`${API_URL}?limit=${all ? 1000 : limit}&offset=${offset}`);
-      if (!response.ok) throw new Error('Network response was not ok');
+      const response = await fetch(`${API_URL}?limit=${limit}&offset=${offset}`);
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
       const data = await response.json();
-      if (all) setAllPokemons(data.results); // Stockez tous les Pokémon pour la recherche
       return data.results;
     } catch (error) {
-      console.error("Failed to fetch data:", error);
+      console.error("Failed to fetch data:", error.message);
       return [];
     } finally {
       setIsLoading(false);
     }
   };
 
-  const loadPokemons = async (reset = false) => {
-    if (isLoading || (!hasMore && !reset)) return;
-    const newPokemons = await fetchPokemons(reset ? 0 : offset);
-    const pokemonDetails = await Promise.all(newPokemons.map(async (pokemon) => {
-      const detailsResponse = await fetch(pokemon.url);
-      const details = await detailsResponse.json();
-      return {
-        name: pokemon.name,
-        image: details.sprites.other['dream_world'].front_default || details.sprites.front_default,
-        types: details.types.map(type => type.type.name), // Storing types of each Pokémon
-        stats: details.stats.map(stat => ({ statName: stat.stat.name, value: stat.base_stat })) // Storing stats
-      };
-    }));
-    if (reset) {
-      setDisplayedPokemons(pokemonDetails);
-    } else {
-      setDisplayedPokemons(prev => [...prev, ...pokemonDetails]);
+  const loadDetails = async (pokemons) => {
+    try {
+      const details = await Promise.all(pokemons.map(async (pokemon) => {
+        const detailsResponse = await fetch(pokemon.url);
+        const detailsData = await detailsResponse.json();
+        return {
+          ...pokemon,
+          image: detailsData.sprites.other['dream_world'].front_default || detailsData.sprites.front_default,
+          types: detailsData.types ? detailsData.types.map(type => type.type.name) : []
+        };
+      }));
+      return details;
+    } catch (error) {
+      console.error("Error loading details:", error);
+      return [];
     }
-    setOffset(prev => prev + newPokemons.length);
-    setHasMore(newPokemons.length > 0);
   };
 
-  const handleSearchChange = async (value) => {
-    setSearchTerm(value);
-    if (!value) {
-      setDisplayedPokemons([]);
-      setOffset(0);
-      loadPokemons(true); // Reset and load initial data
-    } else {
-      await fetchPokemons(0, 1000, true);
-      const filtered = allPokemons.filter(pokemon => pokemon.name.toLowerCase().includes(value.toLowerCase()));
-      setDisplayedPokemons(filtered);
+  const updateDisplayedPokemons = useCallback(() => {
+    const filteredPokemons = allPokemons.filter(pokemon =>
+      pokemon.name.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+    setDisplayedPokemons(filteredPokemons);
+  }, [searchQuery, allPokemons]);
+
+  const loadPokemons = async () => {
+    if (isLoading || !hasMore) return;
+    const newPokemons = await fetchPokemons(offset);
+    if (newPokemons.length === 0) {
+      setHasMore(false);
+      return;
     }
+    const pokemonDetails = await loadDetails(newPokemons);
+    setAllPokemons(prev => [...prev, ...pokemonDetails]);
+    setOffset(prev => prev + 20);
   };
 
   useEffect(() => {
-    loadPokemons(); // Initial load with pagination
+    loadPokemons(); // Initial load with first 20 data
   }, []);
 
   useEffect(() => {
+    updateDisplayedPokemons();
+  }, [searchQuery, allPokemons]);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      if (window.innerHeight + document.documentElement.scrollTop !== document.documentElement.offsetHeight || isLoading) return;
+      loadPokemons();
+    };
+
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, [isLoading, hasMore]);
 
-  const handleScroll = useCallback(() => {
-    if (window.innerHeight + document.documentElement.scrollTop !== document.documentElement.offsetHeight || isLoading) return;
-    loadPokemons();
-  }, [isLoading, hasMore]);
-
   return (
     <div>
-      <SearchComponent onSearchChange={handleSearchChange} />
+      <SearchComponent
+        onSearchChange={setSearchQuery}
+        totalDisplayed={displayedPokemons.length}
+        totalPokemons={allPokemons.length}
+      />
       <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
         {displayedPokemons.map((pokemon, index) => (
           <div key={index} className="bg-white border border-gray-200 rounded-lg shadow overflow-hidden pokemon-card">
             <div className="text-center p-4">
               <img className="mx-auto h-40 w-auto" src={pokemon.image} alt={pokemon.name} />
               <p className="mt-2 text-xl font-semibold">{pokemon.name}</p>
-              {/* Displaying types as an example of additional information */}
-              <div>{pokemon.types.join(', ')}</div>
+              <div>{pokemon.types && pokemon.types.join(', ')}</div>
             </div>
           </div>
         ))}
