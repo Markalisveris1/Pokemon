@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import Popup from "./Popup";
 
-const PokemonCard = ({ pokemon }) => {
+const PokemonCard = ({ pokemon, onNext, onPrevious, showAddButton = true, showDeleteButton = false }) => {
   const [isOpen, setIsOpen] = useState(false);
 
   const togglePopup = () => {
@@ -27,7 +27,16 @@ const PokemonCard = ({ pokemon }) => {
           <p className="text-gray-600">{pokemon.number}</p>
         </div>
       </div>
-      {isOpen && <Popup pokemon={pokemon} closePopup={togglePopup} />}
+      {isOpen && (
+        <Popup
+          pokemon={pokemon}
+          closePopup={togglePopup}
+          onNext={onNext}
+          onPrevious={onPrevious}
+          showAddButton={showAddButton}
+          showDeleteButton={showDeleteButton}
+        />
+      )}
     </div>
   );
 };

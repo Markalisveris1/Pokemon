@@ -1,15 +1,22 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ResponsiveContainer } from "recharts";
 import Alert from "./Alert";
 
-const Popup = ({ pokemon, closePopup, onNext, onPrevious }) => {
+const Popup = ({ pokemon, closePopup, onNext, onPrevious, showAddButton = true, showDeleteButton = false }) => {
   const [alertMessage, setAlertMessage] = useState(null);
   const [alertType, setAlertType] = useState(null);
+  const [statsData, setStatsData] = useState([]);
 
-  const statsData = pokemon.stats.map((stat) => ({
-    stat: stat.name,
-    value: stat.base_stat,
-  }));
+  useEffect(() => {
+    console.log("Popup Props:", { onNext, onPrevious, showAddButton, showDeleteButton }); // Log to check props
+    if (pokemon && pokemon.stats) {
+      const data = pokemon.stats.map((stat) => ({
+        stat: stat.name,
+        value: stat.base_stat,
+      }));
+      setStatsData(data);
+    }
+  }, [pokemon, onNext, onPrevious, showAddButton, showDeleteButton]);
 
   const addToPokedex = () => {
     let pokedex = [];
@@ -36,6 +43,25 @@ const Popup = ({ pokemon, closePopup, onNext, onPrevious }) => {
     setAlertMessage(`${pokemon.name} a été ajouté au Pokédex !`);
     setAlertType("success");
   };
+
+  const deleteFromPokedex = () => {
+    try {
+      let pokedex = JSON.parse(localStorage.getItem("pokedex"));
+      if (Array.isArray(pokedex)) {
+        pokedex = pokedex.filter((p) => p.number !== pokemon.number);
+        localStorage.setItem("pokedex", JSON.stringify(pokedex));
+        setAlertMessage(`${pokemon.name} a été supprimé du Pokédex !`);
+        setAlertType("success");
+      }
+    } catch (e) {
+      setAlertMessage("Erreur lors de la suppression du Pokémon.");
+      setAlertType("error");
+    }
+  };
+
+  if (!pokemon) {
+    return null; // Return null or some fallback UI if pokemon is not defined
+  }
 
   return (
     <div className="fixed inset-0 flex items-center justify-center z-50" onClick={closePopup}>
@@ -72,9 +98,20 @@ const Popup = ({ pokemon, closePopup, onNext, onPrevious }) => {
               </RadarChart>
             </ResponsiveContainer>
           </div>
-          <button className="bg-yellow-500 text-white py-2 px-4 rounded-lg hover:bg-yellow-600" onClick={addToPokedex}>
-            Ajouter au Pokédex
-          </button>
+          {showAddButton && (
+            <button
+              className="bg-yellow-500 text-white py-2 px-4 rounded-lg hover:bg-yellow-600"
+              onClick={addToPokedex}>
+              Ajouter au Pokédex
+            </button>
+          )}
+          {showDeleteButton && (
+            <button
+              className="bg-red-500 text-white py-2 px-4 rounded-lg hover:bg-red-600 ml-4"
+              onClick={deleteFromPokedex}>
+              Supprimer du Pokédex
+            </button>
+          )}
         </div>
         <button
           className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-white text-gray-800 p-2 rounded-full shadow-lg hover:bg-gray-200"

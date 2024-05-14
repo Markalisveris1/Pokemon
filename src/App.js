@@ -4,7 +4,6 @@ import Layout from './components/Layout/Head';
 import Loader from './components/Loader';
 import SearchComponent from './components/SearchComponent';
 import PokemonCard from './components/PokemonCard';
-import Popup from './components/Popup';
 
 const API_URL = process.env.REACT_APP_POKEMON_API_URL || "https://pokeapi.co/api/v2/pokemon";
 
@@ -141,18 +140,16 @@ const PokemonList = () => {
         />
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 mt-4">
           {displayedPokemons.map((pokemon, index) => (
-            <PokemonCard key={index} pokemon={pokemon} onClick={() => handlePokemonClick(pokemon)} />
+            <PokemonCard key={index} pokemon={pokemon}
+              onClick={() => handlePokemonClick(pokemon)}
+              onNext={handleNext}
+              onPrevious={handlePrevious}
+              showAddButton={false}
+              showDeleteButton={true} />
           ))}
           {isLoading && <Loader />}
         </div>
-        {selectedPokemon && (
-          <Popup
-            pokemon={selectedPokemon}
-            closePopup={() => setSelectedPokemon(null)}
-            onNext={handleNext}
-            onPrevious={handlePrevious}
-          />
-        )}
+
       </div>
     </div>
   );
