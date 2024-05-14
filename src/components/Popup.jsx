@@ -1,76 +1,70 @@
 import React from "react";
-import styled from "styled-components";
+import { Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ResponsiveContainer } from "recharts";
 
-const Overlay = styled.div`
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-`;
+const Popup = ({ pokemon, closePopup, onNext, onPrevious }) => {
+  const statsData = pokemon.stats.map((stat) => ({
+    stat: stat.name,
+    value: stat.base_stat,
+  }));
 
-const PopupContainer = styled.div`
-  width: 400px;
-  background-color: white;
-  border-radius: 15px;
-  padding: 20px;
-  position: relative;
-`;
-
-const CloseButton = styled.button`
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  background: none;
-  border: none;
-  font-size: 20px;
-  cursor: pointer;
-`;
-
-const PokemonDetails = styled.div`
-  text-align: center;
-`;
-
-const PokemonType = styled.div`
-  margin-top: 10px;
-`;
-
-const PokemonStats = styled.div`
-  margin-top: 20px;
-`;
-
-const AddButton = styled.button`
-  background-color: #ffcc00;
-  border: none;
-  padding: 10px 20px;
-  border-radius: 10px;
-  cursor: pointer;
-  margin-top: 10px;
-`;
-
-const Popup = ({ pokemon, closePopup }) => (
-  <Overlay onClick={closePopup}>
-    <PopupContainer onClick={(e) => e.stopPropagation()}>
-      <CloseButton onClick={closePopup}>×</CloseButton>
-      <PokemonDetails>
-        <h2>{pokemon.name}</h2>
-        <img src={pokemon.image} alt={pokemon.name} width="150" />
-        <p>{pokemon.description}</p>
-        <PokemonType>
-          <strong>Type:</strong> {pokemon.types.join(", ")}
-        </PokemonType>
-        <PokemonStats>
-          <strong>Stats:</strong>
-          {/* Placez ici la représentation graphique des stats */}
-        </PokemonStats>
-        <AddButton>Ajouter au Pokédex</AddButton>
-      </PokemonDetails>
-    </PopupContainer>
-  </Overlay>
-);
+  return (
+    <div className="fixed inset-0 flex items-center justify-center z-50" onClick={closePopup}>
+      <div className="absolute inset-0 bg-black bg-opacity-75" onClick={closePopup}></div>
+      <div className="relative bg-white rounded-lg p-6 w-full max-w-md z-60" onClick={(e) => e.stopPropagation()}>
+        <button className="absolute top-2 right-2 text-gray-600 hover:text-gray-900" onClick={closePopup}>
+          ×
+        </button>
+        <div className="text-center">
+          <div className="relative inline-block mb-4">
+            <img
+              className="w-48 h-48 mx-auto rounded-full border-4 border-white shadow-lg"
+              src={pokemon.image}
+              alt={pokemon.name}
+              style={{ backgroundColor: pokemon.color }}
+            />
+            <span className="absolute top-2 right-2 bg-white text-gray-800 px-2 py-1 rounded-lg shadow-lg">
+              {pokemon.number}
+            </span>
+          </div>
+          <h2 className="text-2xl font-bold mb-4">{pokemon.name}</h2>
+          <p className="text-gray-700 mb-4">{pokemon.description}</p>
+          <div className="mb-4">
+            <strong>Type:</strong> {pokemon.types.map((type) => type.name).join(", ")}
+          </div>
+          <div className="mb-4">
+            <strong>Stats:</strong>
+            <ResponsiveContainer width="100%" height={300}>
+              <RadarChart outerRadius={90} data={statsData}>
+                <PolarGrid />
+                <PolarAngleAxis dataKey="stat" />
+                <PolarRadiusAxis angle={30} domain={[0, 150]} />
+                <Radar name="Stats" dataKey="value" stroke="#8884d8" fill="#8884d8" fillOpacity={0.6} />
+              </RadarChart>
+            </ResponsiveContainer>
+          </div>
+          <button className="bg-yellow-500 text-white py-2 px-4 rounded-lg hover:bg-yellow-600">
+            Ajouter au Pokédex
+          </button>
+        </div>
+        <button
+          className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-white text-gray-800 p-2 rounded-full shadow-lg hover:bg-gray-200"
+          onClick={(e) => {
+            e.stopPropagation();
+            onPrevious();
+          }}>
+          &larr;
+        </button>
+        <button
+          className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-white text-gray-800 p-2 rounded-full shadow-lg hover:bg-gray-200"
+          onClick={(e) => {
+            e.stopPropagation();
+            onNext();
+          }}>
+          &rarr;
+        </button>
+      </div>
+    </div>
+  );
+};
 
 export default Popup;

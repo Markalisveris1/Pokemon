@@ -1,40 +1,5 @@
 import React, { useState } from "react";
-import styled from "styled-components";
 import Popup from "./Popup";
-
-const Card = styled.div`
-  width: 300px;
-  padding: 20px;
-  border-radius: 15px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-  background-color: ${({ color }) => color};
-  cursor: pointer;
-  transform: perspective(1000px) rotateY(0);
-  transition: transform 0.3s;
-
-  &:hover {
-    transform: perspective(1000px) rotateY(15deg);
-  }
-`;
-
-const PokemonImage = styled.img`
-  width: 100%;
-  border-radius: 15px;
-`;
-
-const PokemonInfo = styled.div`
-  text-align: center;
-  margin-top: 15px;
-`;
-
-const AddButton = styled.button`
-  background-color: #ffcc00;
-  border: none;
-  padding: 10px 20px;
-  border-radius: 10px;
-  cursor: pointer;
-  margin-top: 10px;
-`;
 
 const PokemonCard = ({ pokemon }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -44,16 +9,26 @@ const PokemonCard = ({ pokemon }) => {
   };
 
   return (
-    <>
-      <Card color={pokemon.color} onClick={togglePopup}>
-        <PokemonImage src={pokemon.image} alt={pokemon.name} />
-        <PokemonInfo>
-          <h2>{pokemon.name}</h2>
-          <p>{pokemon.number}</p>
-        </PokemonInfo>
-      </Card>
+    <div>
+      <div
+        className="relative w-72 p-6 bg-white rounded-lg shadow-md cursor-pointer transform transition-transform duration-300 hover:shadow-xl hover:scale-105"
+        style={{ backgroundColor: pokemon.color }}
+        onClick={togglePopup}>
+        <div className="relative overflow-hidden rounded-lg" style={{ height: "200px" }}>
+          <img
+            className="absolute inset-0 w-full h-full object-contain transform transition-transform duration-300 hover:scale-110"
+            src={pokemon.image}
+            alt={pokemon.name}
+            style={{ filter: "drop-shadow(0px 4px 4px rgba(0, 0, 0, 0.25))" }}
+          />
+        </div>
+        <div className="text-center mt-4">
+          <h2 className="text-xl font-bold">{pokemon.name}</h2>
+          <p className="text-gray-600">{pokemon.number}</p>
+        </div>
+      </div>
       {isOpen && <Popup pokemon={pokemon} closePopup={togglePopup} />}
-    </>
+    </div>
   );
 };
 

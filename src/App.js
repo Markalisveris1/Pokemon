@@ -3,27 +3,9 @@ import Loader from './components/Loader';
 import SearchComponent from './components/SearchComponent';
 import 'flowbite';
 import PokemonCard from './components/PokemonCard';
+import Popup from './components/Popup';
 
 const API_URL = process.env.REACT_APP_POKEMON_API_URL || "https://pokeapi.co/api/v2/pokemon";
-
-const samplePokemon = {
-  name: 'Pikachu',
-  number: '#025',
-  image: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/25.png',
-  description: 'Pikachu that can generate powerful electricity have cheek sacs that are extra soft and super stretchy.',
-  types: [
-    { name: 'Electric', slot: 1, url: 'https://pokeapi.co/api/v2/type/13/' }
-  ],
-  color: '#FFEB3B',
-  stats: [
-    { name: 'hp', base_stat: 35, effort: 0 },
-    { name: 'attack', base_stat: 55, effort: 0 },
-    { name: 'defense', base_stat: 40, effort: 0 },
-    { name: 'special-attack', base_stat: 50, effort: 0 },
-    { name: 'special-defense', base_stat: 50, effort: 0 },
-    { name: 'speed', base_stat: 90, effort: 2 }
-  ]
-};
 
 const PokemonList = () => {
   const [allPokemons, setAllPokemons] = useState([]);
@@ -32,6 +14,7 @@ const PokemonList = () => {
   const [offset, setOffset] = useState(0);
   const [hasMore, setHasMore] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedPokemon, setSelectedPokemon] = useState(null);
 
   const fetchPokemons = async (offset, limit = 20) => {
     setIsLoading(true);
@@ -91,7 +74,6 @@ const PokemonList = () => {
     }
   };
 
-
   const updateDisplayedPokemons = useCallback(() => {
     const filteredPokemons = allPokemons.filter(pokemon =>
       pokemon.name.toLowerCase().includes(searchQuery.toLowerCase())
@@ -129,30 +111,45 @@ const PokemonList = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, [isLoading, hasMore]);
 
-  return (
-    <div>
+  const handleNext = () => {
+    if (!selectedPokemon) return;
+    const currentIndex = displayedPokemons.findIndex(p => p.number === selectedPokemon.number);
+    const nextIndex = (currentIndex + 1) % displayedPokemons.length;
+    setSelectedPokemon(displayedPokemons[nextIndex]);
+  };
 
-      <PokemonCard pokemon={samplePokemon} />
+  const handlePrevious = () => {
+    if (!selectedPokemon) return;
+    const currentIndex = displayedPokemons.findIndex(p => p.number === selectedPokemon.number);
+    const previousIndex = (currentIndex - 1 + displayedPokemons.length) % displayedPokemons.length;
+    setSelectedPokemon(displayedPokemons[previousIndex]);
+  };
+
+  const handlePokemonClick = (pokemon) => {
+    setSelectedPokemon(pokemon);
+  };
+
+  return (
+    <div className="p-4">
       <SearchComponent
         onSearchChange={setSearchQuery}
         totalDisplayed={displayedPokemons.length}
         totalPokemons={allPokemons.length}
       />
-      <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 mt-4">
         {displayedPokemons.map((pokemon, index) => (
-
-          <PokemonCard pokemon={pokemon} />
-          // <div key={index} className="bg-white border border-gray-200 rounded-lg shadow overflow-hidden pokemon-card">
-          //   <div className="text-center p-4">
-          //     <img className="mx-auto h-40 w-auto" src={pokemon.image} alt={pokemon.name} />
-          //     <p className="mt-2 text-xl font-semibold">{pokemon.name}</p>
-          //     <div>{pokemon.types && pokemon.types.join(', ')}</div>
-          //   </div>
-          // </div>
+          <PokemonCard key={index} pokemon={pokemon} onClick={() => handlePokemonClick(pokemon)} />
         ))}
         {isLoading && <Loader />}
       </div>
+      {selectedPokemon && (
+        <Popup
+          pokemon={selectedPokemon}
+          closePopup={() => setSelectedPokemon(null)}
+          onNext={handleNext}
+          onPrevious={handlePrevious}
+        />
+      )}
     </div>
   );
 };
