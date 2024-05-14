@@ -1,15 +1,22 @@
 import React, { useState, useEffect } from "react";
 import Layout from "./components/Layout/Head";
 import PokemonCard from "./components/PokemonCard";
-import Popup from "./components/Popup";
 
 const PokedexList = () => {
   const [pokedex, setPokedex] = useState([]);
   const [selectedPokemon, setSelectedPokemon] = useState(null);
 
   useEffect(() => {
-    const storedPokedex = JSON.parse(localStorage.getItem("pokedex")) || [];
-    setPokedex(storedPokedex);
+    try {
+      const storedPokedex = JSON.parse(localStorage.getItem("pokedex"));
+      if (Array.isArray(storedPokedex)) {
+        setPokedex(storedPokedex);
+      } else {
+        localStorage.removeItem("pokedex");
+      }
+    } catch (e) {
+      localStorage.removeItem("pokedex");
+    }
   }, []);
 
   const handleNext = () => {
@@ -37,17 +44,17 @@ const PokedexList = () => {
         <h2 className="text-2xl font-bold mb-4">My Pokédex</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 mt-4">
           {pokedex.map((pokemon, index) => (
-            <PokemonCard key={index} pokemon={pokemon} onClick={() => handlePokemonClick(pokemon)} />
+            <PokemonCard
+              key={index}
+              pokemon={pokemon}
+              onClick={() => handlePokemonClick(pokemon)}
+              onNext={handleNext}
+              onPrevious={handlePrevious}
+              showAddButton={false}
+              showDeleteButton={true}
+            />
           ))}
         </div>
-        {selectedPokemon && (
-          <Popup
-            pokemon={selectedPokemon}
-            closePopup={() => setSelectedPokemon(null)}
-            onNext={handleNext}
-            onPrevious={handlePrevious}
-          />
-        )}
       </div>
     </div>
   );
