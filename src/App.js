@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
+import axios from 'axios';
 import 'flowbite';
 import Layout from './components/Layout/Head';
 import Loader from './components/Loader';
@@ -15,8 +16,11 @@ const PokemonList = () => {
   const [hasMore, setHasMore] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedPokemon, setSelectedPokemon] = useState(null);
+  const [isFetching, setIsFetching] = useState(false);
+  const initialLoadComplete = useRef(false);
 
   const fetchPokemons = async (offset, limit = 20) => {
+
     setIsLoading(true);
     try {
       const response = await fetch(`${API_URL}?limit=${limit}&offset=${offset}`);
@@ -35,38 +39,44 @@ const PokemonList = () => {
 
   const loadDetails = async (pokemons) => {
     try {
-      const details = await Promise.all(pokemons.map(async (pokemon) => {
-        const detailsResponse = await fetch(pokemon.url);
-        const detailsData = await detailsResponse.json();
+      // First, fetch all the URLs for the pokemons
+      const urls = pokemons.map(pokemon => pokemon.url);
 
-        // Fetch additional species details
-        const speciesResponse = await fetch(detailsData.species.url);
-        const speciesData = await speciesResponse.json();
+      // Then, use axios.all to fetch the details
+      const detailsResponses = await axios.all(urls.map(url => axios.get(url)));
+      const detailsData = detailsResponses.map(response => response.data);
 
-        // Extracting the stats
-        const stats = detailsData.stats.map(stat => ({
+      // Next, fetch the species data for each pokemon
+      const speciesUrls = detailsData.map(details => details.species.url);
+      const speciesResponses = await axios.all(speciesUrls.map(url => axios.get(url)));
+      const speciesData = speciesResponses.map(response => response.data);
+
+      // Combine the details and species data
+      const details = detailsData.map((details, index) => {
+        const species = speciesData[index];
+        const stats = details.stats.map(stat => ({
           name: stat.stat.name,
           base_stat: stat.base_stat,
           effort: stat.effort
         }));
 
-        // Extracting the types
-        const types = detailsData.types.map(typeInfo => ({
+        const types = details.types.map(typeInfo => ({
           name: typeInfo.type.name,
           slot: typeInfo.slot,
           url: typeInfo.type.url
         }));
 
         return {
-          name: detailsData.name,
-          number: `#${detailsData.id.toString().padStart(3, '0')}`,
-          image: detailsData.sprites.other['dream_world'].front_default || detailsData.sprites.front_default,
-          description: speciesData.flavor_text_entries.find(entry => entry.language.name === 'en').flavor_text,
+          name: details.name,
+          number: `#${details.id.toString().padStart(3, '0')}`,
+          image: details.sprites.other['dream_world'].front_default || details.sprites.front_default,
+          description: species.flavor_text_entries.find(entry => entry.language.name === 'fr').flavor_text,
           types: types,
-          color: speciesData.color.name,
+          color: species.color.name,
           stats: stats
         };
-      }));
+      });
+
       return details;
     } catch (error) {
       console.error("Error loading details:", error);
@@ -82,19 +92,30 @@ const PokemonList = () => {
   }, [searchQuery, allPokemons]);
 
   const loadPokemons = async () => {
-    if (isLoading || !hasMore) return;
-    const newPokemons = await fetchPokemons(offset);
-    if (newPokemons.length === 0) {
-      setHasMore(false);
-      return;
+    if (isLoading || !hasMore || isFetching) return;
+    setIsFetching(true);
+    try {
+      setIsLoading(true);
+      const newPokemons = await fetchPokemons(offset);
+      if (newPokemons.length === 0) {
+        setHasMore(false);
+        return;
+      }
+      const pokemonDetails = await loadDetails(newPokemons);
+      setAllPokemons(prev => [...prev, ...pokemonDetails]);
+      setOffset(prev => prev + 20);
+    } finally {
+      setIsLoading(false);
+      setIsFetching(false);
     }
-    const pokemonDetails = await loadDetails(newPokemons);
-    setAllPokemons(prev => [...prev, ...pokemonDetails]);
-    setOffset(prev => prev + 20);
   };
 
+
   useEffect(() => {
-    loadPokemons(); // Initial load with first 20 data
+    if (!initialLoadComplete.current) {
+      loadPokemons();
+      initialLoadComplete.current = true;
+    }
   }, []);
 
   useEffect(() => {
@@ -103,13 +124,13 @@ const PokemonList = () => {
 
   useEffect(() => {
     const handleScroll = () => {
-      if (window.innerHeight + document.documentElement.scrollTop !== document.documentElement.offsetHeight || isLoading) return;
+      if (window.innerHeight + document.documentElement.scrollTop !== document.documentElement.offsetHeight || isLoading || isFetching) return;
       loadPokemons();
     };
 
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
-  }, [isLoading, hasMore]);
+  }, [isLoading, hasMore, isFetching]);
 
   const handleNext = () => {
     if (!selectedPokemon) return;
