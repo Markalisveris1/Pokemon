@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useCallback } from "react";
+import 'flowbite';
+import Layout from './components/Layout/Head';
 import Loader from './components/Loader';
 import SearchComponent from './components/SearchComponent';
-import 'flowbite';
 import PokemonCard from './components/PokemonCard';
 import Popup from './components/Popup';
 
@@ -130,26 +131,29 @@ const PokemonList = () => {
   };
 
   return (
-    <div className="p-4">
-      <SearchComponent
-        onSearchChange={setSearchQuery}
-        totalDisplayed={displayedPokemons.length}
-        totalPokemons={allPokemons.length}
-      />
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 mt-4">
-        {displayedPokemons.map((pokemon, index) => (
-          <PokemonCard key={index} pokemon={pokemon} onClick={() => handlePokemonClick(pokemon)} />
-        ))}
-        {isLoading && <Loader />}
-      </div>
-      {selectedPokemon && (
-        <Popup
-          pokemon={selectedPokemon}
-          closePopup={() => setSelectedPokemon(null)}
-          onNext={handleNext}
-          onPrevious={handlePrevious}
+    <div>
+      <Layout></Layout>
+      <div className="p-4">
+        <SearchComponent
+          onSearchChange={setSearchQuery}
+          totalDisplayed={displayedPokemons.length}
+          totalPokemons={allPokemons.length}
         />
-      )}
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 mt-4">
+          {displayedPokemons.map((pokemon, index) => (
+            <PokemonCard key={index} pokemon={pokemon} onClick={() => handlePokemonClick(pokemon)} />
+          ))}
+          {isLoading && <Loader />}
+        </div>
+        {selectedPokemon && (
+          <Popup
+            pokemon={selectedPokemon}
+            closePopup={() => setSelectedPokemon(null)}
+            onNext={handleNext}
+            onPrevious={handlePrevious}
+          />
+        )}
+      </div>
     </div>
   );
 };
