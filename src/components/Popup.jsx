@@ -1,11 +1,41 @@
-import React from "react";
+import React, { useState } from "react";
 import { Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ResponsiveContainer } from "recharts";
+import Alert from "./Alert";
 
 const Popup = ({ pokemon, closePopup, onNext, onPrevious }) => {
+  const [alertMessage, setAlertMessage] = useState(null);
+  const [alertType, setAlertType] = useState(null);
+
   const statsData = pokemon.stats.map((stat) => ({
     stat: stat.name,
     value: stat.base_stat,
   }));
+
+  const addToPokedex = () => {
+    let pokedex = [];
+    try {
+      const storedPokedex = JSON.parse(localStorage.getItem("pokedex"));
+      if (Array.isArray(storedPokedex)) {
+        pokedex = storedPokedex;
+      } else {
+        localStorage.removeItem("pokedex");
+      }
+    } catch (e) {
+      localStorage.removeItem("pokedex");
+    }
+
+    const exists = pokedex.some((p) => p.number === pokemon.number);
+    if (exists) {
+      setAlertMessage(`${pokemon.name} existe déjà dans le Pokédex !`);
+      setAlertType("error");
+      return;
+    }
+
+    pokedex.push(pokemon);
+    localStorage.setItem("pokedex", JSON.stringify(pokedex));
+    setAlertMessage(`${pokemon.name} a été ajouté au Pokédex !`);
+    setAlertType("success");
+  };
 
   return (
     <div className="fixed inset-0 flex items-center justify-center z-50" onClick={closePopup}>
@@ -42,7 +72,7 @@ const Popup = ({ pokemon, closePopup, onNext, onPrevious }) => {
               </RadarChart>
             </ResponsiveContainer>
           </div>
-          <button className="bg-yellow-500 text-white py-2 px-4 rounded-lg hover:bg-yellow-600">
+          <button className="bg-yellow-500 text-white py-2 px-4 rounded-lg hover:bg-yellow-600" onClick={addToPokedex}>
             Ajouter au Pokédex
           </button>
         </div>
@@ -63,6 +93,7 @@ const Popup = ({ pokemon, closePopup, onNext, onPrevious }) => {
           &rarr;
         </button>
       </div>
+      {alertMessage && <Alert message={alertMessage} type={alertType} onClose={() => setAlertMessage(null)} />}
     </div>
   );
 };
