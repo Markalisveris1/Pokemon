@@ -2,7 +2,15 @@ import React, { useState, useEffect } from "react";
 import { Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ResponsiveContainer } from "recharts";
 import Alert from "./Alert";
 
-const Popup = ({ pokemon, closePopup, onNext, onPrevious, showAddButton = true, showDeleteButton = false }) => {
+const Popup = ({
+  pokemon,
+  closePopup,
+  onNext,
+  onPrevious,
+  removeFromPokedex,
+  showAddButton = true,
+  showDeleteButton = false,
+}) => {
   const [alertMessage, setAlertMessage] = useState(null);
   const [alertType, setAlertType] = useState(null);
   const [statsData, setStatsData] = useState([]);
