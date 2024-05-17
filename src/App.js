@@ -7,6 +7,7 @@ import SearchComponent from './components/SearchComponent';
 import PokemonCard from './components/PokemonCard';
 
 const API_URL = process.env.REACT_APP_POKEMON_API_URL || "https://pokeapi.co/api/v2/pokemon";
+const MAX_POKEMONS = 1350;
 
 const PokemonList = () => {
   const [allPokemons, setAllPokemons] = useState([]);
@@ -19,9 +20,7 @@ const PokemonList = () => {
   const [isFetching, setIsFetching] = useState(false);
   const initialLoadComplete = useRef(false);
 
-  const fetchPokemons = async (offset, limit = 200) => {
-
-    setIsLoading(true);
+  const fetchPokemons = async (offset, limit = 20) => {
     try {
       const response = await fetch(`${API_URL}?limit=${limit}&offset=${offset}`);
       if (!response.ok) {
@@ -32,26 +31,20 @@ const PokemonList = () => {
     } catch (error) {
       console.error("Failed to fetch data:", error.message);
       return [];
-    } finally {
-      setIsLoading(false);
     }
   };
 
   const loadDetails = async (pokemons) => {
     try {
-      // First, fetch all the URLs for the pokemons
       const urls = pokemons.map(pokemon => pokemon.url);
 
-      // Then, use axios.all to fetch the details
-      const detailsResponses = await axios.all(urls.map(url => axios.get(url)));
+      const detailsResponses = await Promise.all(urls.map(url => axios.get(url)));
       const detailsData = detailsResponses.map(response => response.data);
 
-      // Next, fetch the species data for each pokemon
       const speciesUrls = detailsData.map(details => details.species.url);
-      const speciesResponses = await axios.all(speciesUrls.map(url => axios.get(url)));
+      const speciesResponses = await Promise.all(speciesUrls.map(url => axios.get(url)));
       const speciesData = speciesResponses.map(response => response.data);
 
-      // Combine the details and species data
       const details = detailsData.map((details, index) => {
         const species = speciesData[index];
         const stats = details.stats.map(stat => ({
@@ -91,46 +84,62 @@ const PokemonList = () => {
     setDisplayedPokemons(filteredPokemons);
   }, [searchQuery, allPokemons]);
 
-  const loadPokemons = async () => {
-    if (isLoading || !hasMore || isFetching) return;
+  const loadPokemons = useCallback(async (newOffset) => {
+    if (isLoading || !hasMore || isFetching || newOffset >= MAX_POKEMONS) return;
     setIsFetching(true);
     try {
       setIsLoading(true);
-      const newPokemons = await fetchPokemons(offset);
+      const newPokemons = await fetchPokemons(newOffset);
       if (newPokemons.length === 0) {
         setHasMore(false);
         return;
       }
       const pokemonDetails = await loadDetails(newPokemons);
       setAllPokemons(prev => [...prev, ...pokemonDetails]);
-      setOffset(prev => prev + 20);
+      setOffset(newOffset + 20);
     } finally {
       setIsLoading(false);
       setIsFetching(false);
     }
-  };
-
+  }, [hasMore, isLoading, isFetching]);
 
   useEffect(() => {
     if (!initialLoadComplete.current) {
-      loadPokemons();
+      loadPokemons(offset);
       initialLoadComplete.current = true;
     }
-  }, []);
+  }, [loadPokemons, offset]);
 
   useEffect(() => {
     updateDisplayedPokemons();
-  }, [searchQuery, allPokemons]);
+  }, [searchQuery, allPokemons, updateDisplayedPokemons]);
 
   useEffect(() => {
     const handleScroll = () => {
       if (window.innerHeight + document.documentElement.scrollTop !== document.documentElement.offsetHeight || isLoading || isFetching) return;
-      loadPokemons();
+      loadPokemons(offset);
     };
 
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
-  }, [isLoading, hasMore, isFetching]);
+  }, [isLoading, hasMore, isFetching, loadPokemons, offset]);
+
+  useEffect(() => {
+    if (searchQuery) {
+      const loadRemainingPokemons = async () => {
+        let currentOffset = offset;
+        while (hasMore && currentOffset < MAX_POKEMONS) {
+          await loadPokemons(currentOffset);
+          currentOffset += 20;
+        }
+        updateDisplayedPokemons();
+      };
+
+      if (!isLoading && !isFetching) {
+        loadRemainingPokemons();
+      }
+    }
+  }, [searchQuery, hasMore, offset, isLoading, isFetching, loadPokemons, updateDisplayedPokemons]);
 
   const handleNext = () => {
     if (!selectedPokemon) return;
@@ -170,7 +179,6 @@ const PokemonList = () => {
           ))}
           {isLoading && <Loader />}
         </div>
-
       </div>
     </div>
   );
