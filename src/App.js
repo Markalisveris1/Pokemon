@@ -19,7 +19,7 @@ const PokemonList = () => {
   const [isFetching, setIsFetching] = useState(false);
   const initialLoadComplete = useRef(false);
 
-  const fetchPokemons = async (offset, limit = 20) => {
+  const fetchPokemons = async (offset, limit = 200) => {
 
     setIsLoading(true);
     try {
@@ -165,8 +165,8 @@ const PokemonList = () => {
               onClick={() => handlePokemonClick(pokemon)}
               onNext={handleNext}
               onPrevious={handlePrevious}
-              showAddButton={false}
-              showDeleteButton={true} />
+              showAddButton={true}
+              showDeleteButton={false} />
           ))}
           {isLoading && <Loader />}
         </div>

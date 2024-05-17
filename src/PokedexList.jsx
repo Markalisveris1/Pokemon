@@ -70,6 +70,12 @@ const PokedexList = () => {
     }
   };
 
+  const removeFromPokedex = (pokemon) => {
+    const updatedPokedex = pokedex.filter((p) => p.number !== pokemon.number);
+    setPokedex(updatedPokedex);
+    setDisplayedPokemons(updatedPokedex); // Update displayedPokemons as well
+  };
+
   return (
     <div>
       <Layout></Layout>
@@ -91,6 +97,7 @@ const PokedexList = () => {
               onPrevious={handlePrevious}
               showAddButton={false}
               showDeleteButton={true}
+              removeFromPokedex={removeFromPokedex}
             />
           ))}
         </div>
