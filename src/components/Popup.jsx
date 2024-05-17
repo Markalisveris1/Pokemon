@@ -1,21 +1,14 @@
 import React, { useState, useEffect } from "react";
 import { Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ResponsiveContainer } from "recharts";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faUser, faAlignLeft, faTag, faChartBar } from "@fortawesome/free-solid-svg-icons";
+import { faAlignLeft, faTag } from "@fortawesome/free-solid-svg-icons";
 import Alert from "./Alert";
 
-const Popup = ({
-  pokemon,
-  closePopup,
-  onNext,
-  onPrevious,
-  removeFromPokedex,
-  showAddButton = true,
-  showDeleteButton = false,
-}) => {
+const Popup = ({ pokemon, closePopup, onNext, onPrevious, showAddButton = true, showDeleteButton = false }) => {
   const [alertMessage, setAlertMessage] = useState(null);
   const [alertType, setAlertType] = useState(null);
   const [statsData, setStatsData] = useState([]);
+  const [isInPokedex, setIsInPokedex] = useState(false);
 
   useEffect(() => {
     if (pokemon && pokemon.stats) {
@@ -27,45 +20,32 @@ const Popup = ({
     }
   }, [pokemon]);
 
-  const addToPokedex = () => {
-    let pokedex = [];
-    try {
-      const storedPokedex = JSON.parse(localStorage.getItem("pokedex"));
-      if (Array.isArray(storedPokedex)) {
-        pokedex = storedPokedex;
-      } else {
-        localStorage.removeItem("pokedex");
-      }
-    } catch (e) {
-      localStorage.removeItem("pokedex");
-    }
+  useEffect(() => {
+    const storedPokedex = JSON.parse(localStorage.getItem("pokedex")) || [];
+    setIsInPokedex(storedPokedex.some((p) => p.number === pokemon.number));
+  }, [pokemon.number]);
 
-    const exists = pokedex.some((p) => p.number === pokemon.number);
-    if (exists) {
+  const addToPokedex = () => {
+    const storedPokedex = JSON.parse(localStorage.getItem("pokedex")) || [];
+    if (!storedPokedex.some((p) => p.number === pokemon.number)) {
+      storedPokedex.push(pokemon);
+      localStorage.setItem("pokedex", JSON.stringify(storedPokedex));
+      setIsInPokedex(true);
+      setAlertMessage(`${pokemon.name} a été ajouté au Pokédex !`);
+      setAlertType("success");
+    } else {
       setAlertMessage(`${pokemon.name} existe déjà dans le Pokédex !`);
       setAlertType("error");
-      return;
     }
-
-    pokedex.push(pokemon);
-    localStorage.setItem("pokedex", JSON.stringify(pokedex));
-    setAlertMessage(`${pokemon.name} a été ajouté au Pokédex !`);
-    setAlertType("success");
   };
 
   const deleteFromPokedex = () => {
-    try {
-      let pokedex = JSON.parse(localStorage.getItem("pokedex"));
-      if (Array.isArray(pokedex)) {
-        pokedex = pokedex.filter((p) => p.number !== pokemon.number);
-        localStorage.setItem("pokedex", JSON.stringify(pokedex));
-        setAlertMessage(`${pokemon.name} a été supprimé du Pokédex !`);
-        setAlertType("success");
-      }
-    } catch (e) {
-      setAlertMessage("Erreur lors de la suppression du Pokémon.");
-      setAlertType("error");
-    }
+    let storedPokedex = JSON.parse(localStorage.getItem("pokedex")) || [];
+    storedPokedex = storedPokedex.filter((p) => p.number !== pokemon.number);
+    localStorage.setItem("pokedex", JSON.stringify(storedPokedex));
+    setIsInPokedex(false);
+    setAlertMessage(`${pokemon.name} a été supprimé du Pokédex !`);
+    setAlertType("success");
   };
 
   if (!pokemon) {
@@ -103,18 +83,17 @@ const Popup = ({
                 <strong>Type:</strong> {pokemon.types.map((type) => type.name).join(", ")}
               </div>
               <div className="flex justify-center">
-                {showAddButton && (
-                  <button
-                    className="bg-yellow-500 text-white py-2 px-4 rounded-lg hover:bg-yellow-600 mr-2"
-                    onClick={addToPokedex}>
-                    Ajouter au Pokédex
-                  </button>
-                )}
-                {showDeleteButton && (
+                {isInPokedex ? (
                   <button
                     className="bg-red-500 text-white py-2 px-4 rounded-lg hover:bg-red-600 ml-2"
                     onClick={deleteFromPokedex}>
                     Supprimer du Pokédex
+                  </button>
+                ) : (
+                  <button
+                    className="bg-yellow-500 text-white py-2 px-4 rounded-lg hover:bg-yellow-600 mr-2"
+                    onClick={addToPokedex}>
+                    Ajouter au Pokédex
                   </button>
                 )}
               </div>
