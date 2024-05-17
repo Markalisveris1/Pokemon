@@ -1,11 +1,33 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Popup from "./Popup";
 
 const PokemonCard = ({ pokemon, onNext, onPrevious, showAddButton = true, showDeleteButton = false }) => {
   const [isOpen, setIsOpen] = useState(false);
+  const [isInPokedex, setIsInPokedex] = useState(false);
+
+  useEffect(() => {
+    const storedPokedex = JSON.parse(localStorage.getItem("pokedex")) || [];
+    setIsInPokedex(storedPokedex.some((p) => p.number === pokemon.number));
+  }, [pokemon.number]);
 
   const togglePopup = () => {
     setIsOpen(!isOpen);
+  };
+
+  const handleAddToPokedex = () => {
+    const storedPokedex = JSON.parse(localStorage.getItem("pokedex")) || [];
+    if (!storedPokedex.some((p) => p.number === pokemon.number)) {
+      storedPokedex.push(pokemon);
+      localStorage.setItem("pokedex", JSON.stringify(storedPokedex));
+      setIsInPokedex(true);
+    }
+  };
+
+  const handleRemoveFromPokedex = () => {
+    let storedPokedex = JSON.parse(localStorage.getItem("pokedex")) || [];
+    storedPokedex = storedPokedex.filter((p) => p.number !== pokemon.number);
+    localStorage.setItem("pokedex", JSON.stringify(storedPokedex));
+    setIsInPokedex(false);
   };
 
   return (
@@ -37,6 +59,21 @@ const PokemonCard = ({ pokemon, onNext, onPrevious, showAddButton = true, showDe
           showDeleteButton={showDeleteButton}
         />
       )}
+      <div className="flex justify-center mt-4">
+        {isInPokedex ? (
+          <button
+            className="rounded-full bg-red-500 text-white p-2 hover:bg-red-700 transition-colors duration-300"
+            onClick={handleRemoveFromPokedex}>
+            -
+          </button>
+        ) : (
+          <button
+            className="rounded-full bg-green-500 text-white p-2 hover:bg-green-700 transition-colors duration-300"
+            onClick={handleAddToPokedex}>
+            +
+          </button>
+        )}
+      </div>
     </div>
   );
 };

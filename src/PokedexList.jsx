@@ -10,7 +10,7 @@ const PokedexList = () => {
   const [displayedPokemons, setDisplayedPokemons] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [showConfirmPopup, setShowConfirmPopup] = useState(false);
-  const [alertMessage, setAlertMessage] = useState(null); // State to manage alert message
+  const [alertMessage, setAlertMessage] = useState(null);
 
   useEffect(() => {
     try {
@@ -60,6 +60,7 @@ const PokedexList = () => {
     setPokedex([]);
     setDisplayedPokemons([]);
     setShowConfirmPopup(false);
+    setAlertMessage("La liste de Pokédex a été vidée.");
   };
 
   const handleClearButtonClick = () => {
@@ -68,12 +69,6 @@ const PokedexList = () => {
     } else {
       setShowConfirmPopup(true);
     }
-  };
-
-  const removeFromPokedex = (pokemon) => {
-    const updatedPokedex = pokedex.filter((p) => p.number !== pokemon.number);
-    setPokedex(updatedPokedex);
-    setDisplayedPokemons(updatedPokedex); // Update displayedPokemons as well
   };
 
   return (
@@ -97,7 +92,6 @@ const PokedexList = () => {
               onPrevious={handlePrevious}
               showAddButton={false}
               showDeleteButton={true}
-              removeFromPokedex={removeFromPokedex}
             />
           ))}
         </div>
