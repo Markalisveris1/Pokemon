@@ -12,7 +12,7 @@ const PokedexList = () => {
   const [showConfirmPopup, setShowConfirmPopup] = useState(false);
   const [alertMessage, setAlertMessage] = useState(null);
 
-  useEffect(() => {
+  const loadPokedex = () => {
     try {
       const storedPokedex = JSON.parse(localStorage.getItem("pokedex"));
       if (Array.isArray(storedPokedex)) {
@@ -24,6 +24,22 @@ const PokedexList = () => {
     } catch (e) {
       localStorage.removeItem("pokedex");
     }
+  };
+
+  useEffect(() => {
+    loadPokedex();
+
+    const handleStorageChange = (e) => {
+      if (e.key === "pokedex") {
+        loadPokedex();
+      }
+    };
+
+    window.addEventListener("storage", handleStorageChange);
+
+    return () => {
+      window.removeEventListener("storage", handleStorageChange);
+    };
   }, []);
 
   useEffect(() => {
@@ -61,6 +77,7 @@ const PokedexList = () => {
     setDisplayedPokemons([]);
     setShowConfirmPopup(false);
     setAlertMessage("La liste de Pokédex a été vidée.");
+    window.dispatchEvent(new Event("storage"));
   };
 
   const handleClearButtonClick = () => {

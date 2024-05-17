@@ -20,6 +20,7 @@ const PokemonCard = ({ pokemon, onNext, onPrevious, showAddButton = true, showDe
       storedPokedex.push(pokemon);
       localStorage.setItem("pokedex", JSON.stringify(storedPokedex));
       setIsInPokedex(true);
+      window.dispatchEvent(new Event("storage"));
     }
   };
 
@@ -28,6 +29,7 @@ const PokemonCard = ({ pokemon, onNext, onPrevious, showAddButton = true, showDe
     storedPokedex = storedPokedex.filter((p) => p.number !== pokemon.number);
     localStorage.setItem("pokedex", JSON.stringify(storedPokedex));
     setIsInPokedex(false);
+    window.dispatchEvent(new Event("storage"));
   };
 
   return (
