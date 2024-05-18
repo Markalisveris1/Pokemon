@@ -4,7 +4,7 @@ Ce projet est une application de liste et de Pokédex de Pokémon construite ave
 
 ## Vidéo de Présentation
 
-[![Regarder la vidéo](home.png)](md/react-pokemom-pokedex.mov)
+[![Regarder la vidéo](home.png)](md/react-pokemom-pokedex.mov) 
 
 ## Scripts Disponibles
 
